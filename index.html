@@ -2,260 +2,323 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WayFinder Sardegna</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>WayFinder Sardegna - Test Borghi</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-body { margin:0; font-family:Arial; }
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 
-#screen1 {
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
+body{
+background:#dfe7ee;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+padding:10px;
 }
 
-#gpsBtn {
-  padding:15px;
-  background:black;
-  color:white;
-  border:none;
-  border-radius:10px;
+#app{
+width:min(100vw,390px);
+aspect-ratio:9/16;
+background:#fff;
+border-radius:28px;
+overflow:hidden;
+display:flex;
+flex-direction:column;
 }
 
-#screen2 { display:none; }
+/* HEADER */
+#header img{width:100%}
 
-#map { height:100vh; }
-
-/* Pulsante rosso */
-#menuBtn {
-  position:absolute;
-  top:20px;
-  right:20px;
-  background:red;
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:24px;
-  z-index:1000;
-  animation:pulse 1.5s infinite;
+#topBar{
+padding:8px;
+text-align:center;
+font-weight:800;
+font-size:13px;
 }
 
-@keyframes pulse {
-  0% {transform:scale(1);}
-  50% {transform:scale(1.1);}
-  100% {transform:scale(1);}
+/* MAP */
+#mapWrap{flex:1;position:relative}
+#map{width:100%;height:100%}
+
+/* BUTTON */
+#plusBtn{
+position:absolute;
+top:60px;
+right:12px;
+width:60px;
+height:60px;
+border-radius:50%;
+background:red;
+color:#fff;
+font-size:38px;
+z-index:2000;
+animation:pulse 1.2s infinite;
 }
 
-#menuPoi {
-  position:absolute;
-  top:90px;
-  right:20px;
-  width:260px;
-  max-height:400px;
-  overflow:auto;
-  background:white;
-  display:none;
-  z-index:1000;
+@keyframes pulse{
+0%{transform:scale(1)}
+50%{transform:scale(1.1)}
+100%{transform:scale(1)}
 }
 
-.poi-item {
-  padding:10px;
-  border-bottom:1px solid #eee;
-  cursor:pointer;
+/* PANEL */
+#poiPanel{
+position:absolute;
+top:80px;
+left:10px;
+right:10px;
+background:#fff;
+border-radius:16px;
+display:none;
+max-height:55%;
+overflow:auto;
+z-index:999;
+padding:10px;
 }
+
+.poiItem{
+padding:8px;
+border-bottom:1px solid #eee;
+cursor:pointer;
+font-weight:600;
+}
+
+/* CARD */
+#detailCard{
+position:absolute;
+top:25%;
+left:10px;
+right:10px;
+background:#fff;
+border-radius:16px;
+padding:12px;
+display:none;
+z-index:1000;
+}
+.btn{width:100%;padding:10px;margin-top:6px}
+
+/* FOOTER */
+footer{
+height:110px;
+background:#111;
+color:#fff;
+text-align:center;
+}
+
+.rss{height:26px;overflow:hidden;}
+.track{animation:scroll 30s linear infinite;}
+@keyframes scroll{
+0%{transform:translateX(100%)}
+100%{transform:translateX(-100%)}
+}
+
+.brand{
+font-size:16px;
+font-weight:900;
+}
+
+/* POPUP */
+.overlay{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,.7);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:2000;
+}
+
+.popup{
+background:#fff;
+padding:20px;
+border-radius:16px;
+text-align:center;
+}
+
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 
-<!-- SCREEN 1 -->
-<div id="screen1">
-  <h2>WayFinder Sardegna</h2>
-  <button id="gpsBtn">Attiva GPS</button>
+<div id="app">
+
+<!-- GPS -->
+<div id="gpsModal" class="overlay">
+<div class="popup">
+<h3>Consenti GPS</h3>
+<button onclick="enableGPS()">Consenti</button>
+</div>
 </div>
 
-<!-- SCREEN 2 -->
-<div id="screen2">
-  <div id="menuBtn">+</div>
-  <div id="menuPoi"></div>
-  <div id="map"></div>
+<!-- RAGGIO -->
+<div id="radiusModal" class="overlay hidden">
+<div class="popup">
+<p>Seleziona raggio</p>
+<input type="range" min="1" max="200" value="50" id="radius">
+<p><span id="radiusValue">50</span> km</p>
+<button onclick="startApp()">Avvia</button>
+</div>
 </div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<div id="header">
+<img src="header-wayfinder.png">
+</div>
+
+<div id="topBar">
+BORGI entro <span id="raggioTxt">--</span> KM
+</div>
+
+<div id="mapWrap">
+
+<div id="map"></div>
+
+<button id="plusBtn">+</button>
+
+<div id="poiPanel">
+<div id="poiList"></div>
+</div>
+
+</div>
+
+<div id="detailCard">
+<h3 id="poiTitle"></h3>
+<button class="btn" id="wikiBtn">Wikipedia</button>
+<button class="btn" id="goBtn">Come arrivare</button>
+<button class="btn" onclick="closeCard()">Chiudi</button>
+</div>
+
+<footer>
+<div class="rss"><div class="track">Borghi storici della Sardegna ✦ Turismo culturale</div></div>
+<div class="rss"><div class="track">📞 112 ✦ 📞 118 ✦ 📞 INFOPOINT</div></div>
+<div class="brand"><b>PASSAMONTI</b>_COMMUNICATION</div>
+</footer>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 
-// ===== DATASET COMPLETO =====
-const POI = [
+let map=L.map("map").setView([40,9],8);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-/* BORGHI */
-{nome:"Lollove", lat:40.3650, lon:9.3324, categoria:"borgo"},
-{nome:"Tempio Pausania", lat:40.9, lon:9.1, categoria:"borgo"},
-{nome:"Aggius", lat:40.93, lon:8.98, categoria:"borgo"},
-{nome:"Atzara", lat:39.99, lon:9.07, categoria:"borgo"},
-{nome:"Bosa", lat:40.3, lon:8.5, categoria:"borgo"},
-{nome:"Carloforte", lat:39.14, lon:8.3, categoria:"borgo"},
-{nome:"Galtellì", lat:40.39, lon:9.61, categoria:"borgo"},
-{nome:"Laconi", lat:39.85, lon:9.05, categoria:"borgo"},
-{nome:"La Maddalena", lat:41.21, lon:9.41, categoria:"borgo"},
-{nome:"Oliena", lat:40.27, lon:9.4, categoria:"borgo"},
-{nome:"Posada", lat:40.63, lon:9.72, categoria:"borgo"},
-{nome:"Sadali", lat:39.82, lon:9.27, categoria:"borgo"},
-{nome:"Sardara", lat:39.62, lon:8.82, categoria:"borgo"},
-{nome:"Gavoi", lat:40.16, lon:9.2, categoria:"borgo"},
-{nome:"Castelsardo", lat:40.92, lon:8.71, categoria:"borgo"},
+let userLat=40,userLng=9;
+let poiLayer=L.layerGroup().addTo(map);
 
-/* NURAGHI */
-{nome:"Nuraghe Majori", lat:40.9, lon:9.1, categoria:"nuraghe"},
-{nome:"Nuraghe Palmavera", lat:40.557, lon:8.319, categoria:"nuraghe"},
-{nome:"Santu Antine", lat:40.421, lon:8.735, categoria:"nuraghe"},
-{nome:"Serra Orrios", lat:40.292, lon:9.588, categoria:"nuraghe"},
-{nome:"Nuraghe Losa", lat:40.128, lon:8.82, categoria:"nuraghe"},
-{nome:"Su Nuraxi", lat:39.7, lon:9.0, categoria:"nuraghe"},
-{nome:"Nuraghe Arrubiu", lat:39.66, lon:9.3, categoria:"nuraghe"},
-
-/* TOMBE */
-{nome:"Coddu Vecchiu", lat:41.08, lon:9.38, categoria:"tomba"},
-{nome:"Li Lolghi", lat:41.07, lon:9.37, categoria:"tomba"},
-{nome:"Li Mizzani", lat:41.18, lon:9.38, categoria:"tomba"},
-{nome:"S'Ena e Thomes", lat:40.28, lon:9.58, categoria:"tomba"},
-{nome:"Madau", lat:40.12, lon:9.26, categoria:"tomba"},
-{nome:"Is Concias", lat:39.25, lon:9.22, categoria:"tomba"},
-
-/* DOMUS */
-{nome:"Anghelu Ruju", lat:40.6, lon:8.29, categoria:"domus"},
-{nome:"Sant'Andrea Priu", lat:40.43, lon:8.77, categoria:"domus"},
-{nome:"Montessu", lat:39.11, lon:8.67, categoria:"domus"},
-{nome:"Mesu e Montes", lat:40.67, lon:8.6, categoria:"domus"},
-{nome:"Su Crucifissu Mannu", lat:40.83, lon:8.4, categoria:"domus"},
-
-/* FAUNA */
-{nome:"Fenicottero rosa", lat:39.22, lon:9.14, categoria:"fauna"},
-{nome:"Cervo sardo", lat:39.18, lon:8.93, categoria:"fauna"},
-{nome:"Grifone", lat:40.28, lon:8.47, categoria:"fauna"},
-{nome:"Aquila reale", lat:40.02, lon:9.32, categoria:"fauna"},
-{nome:"Muflone", lat:40.03, lon:9.68, categoria:"fauna"}
-
+/* 🔥 15 BORGHI REALI */
+let poiData=[
+{name:"Lollove",lat:40.365,lon:9.3324},
+{name:"Tempio Pausania",lat:40.9,lon:9.1},
+{name:"Aggius",lat:40.93,lon:8.98},
+{name:"Atzara",lat:39.99,lon:9.07},
+{name:"Bosa",lat:40.3,lon:8.5},
+{name:"Carloforte",lat:39.14,lon:8.3},
+{name:"Galtellì",lat:40.39,lon:9.61},
+{name:"Laconi",lat:39.85,lon:9.05},
+{name:"La Maddalena",lat:41.21,lon:9.41},
+{name:"Oliena",lat:40.27,lon:9.4},
+{name:"Posada",lat:40.63,lon:9.72},
+{name:"Sadali",lat:39.82,lon:9.27},
+{name:"Sardara",lat:39.62,lon:8.82},
+{name:"Gavoi",lat:40.16,lon:9.2},
+{name:"Castelsardo",lat:40.92,lon:8.71}
 ];
 
-// ===== VAR =====
-let map, userMarker;
-let markers = {};
-let selected = null;
-
-// ===== COLORI =====
-function colore(cat){
-  return cat==="nuraghe"?"brown":
-         cat==="domus"?"purple":
-         cat==="tomba"?"black":
-         cat==="fauna"?"green":
-         cat==="borgo"?"blue":"gray";
+/* GPS */
+function enableGPS(){
+navigator.geolocation.getCurrentPosition(pos=>{
+userLat=pos.coords.latitude;
+userLng=pos.coords.longitude;
+document.getElementById("gpsModal").classList.add("hidden");
+document.getElementById("radiusModal").classList.remove("hidden");
+});
 }
 
-// ===== GPS =====
-document.getElementById("gpsBtn").onclick = ()=>{
+/* SLIDER */
+document.getElementById("radius").oninput=function(){
+document.getElementById("radiusValue").innerText=this.value;
+}
 
-  navigator.geolocation.getCurrentPosition(pos=>{
+/* START */
+function startApp(){
+let r=document.getElementById("radius").value;
+document.getElementById("raggioTxt").innerText=r;
+document.getElementById("radiusModal").classList.add("hidden");
 
-    document.getElementById("screen1").style.display="none";
-    document.getElementById("screen2").style.display="block";
+drawUser();
+loadPOI();
+}
 
-    map = L.map('map').setView([40.1,9],8);
+/* USER */
+function drawUser(){
+L.circleMarker([userLat,userLng],{
+radius:12,
+color:"red",
+fillColor:"red",
+fillOpacity:1
+}).addTo(map).bindPopup("TU SEI QUI").openPopup();
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+map.setView([userLat,userLng],10);
+}
 
-    // TU SEI QUI
-    userMarker = L.circleMarker([pos.coords.latitude,pos.coords.longitude],{
-      radius:10,
-      color:"red",
-      fillColor:"red",
-      fillOpacity:1
-    }).addTo(map).bindPopup("Tu sei qui").openPopup();
+/* POI */
+function loadPOI(){
 
-    caricaPOI();
-    creaMenu();
+poiLayer.clearLayers();
+document.getElementById("poiList").innerHTML="";
 
-  });
+poiData.forEach(p=>{
+
+let m=L.circleMarker([p.lat,p.lon],{
+radius:10,
+color:"#000",
+weight:2,
+fillColor:"orange",
+fillOpacity:1
+}).addTo(poiLayer);
+
+m.on("click",()=>openDetail(p));
+
+let row=document.createElement("div");
+row.className="poiItem";
+row.innerText=p.name;
+
+row.onclick=function(){
+map.setView([p.lat,p.lon],13);
 };
 
-// ===== CREA MARKER =====
-function caricaPOI(){
-  POI.forEach(p=>{
-    let m = L.circleMarker([p.lat,p.lon],{
-      radius:6,
-      color:colore(p.categoria),
-      fillColor:colore(p.categoria),
-      fillOpacity:1
-    }).addTo(map);
+document.getElementById("poiList").appendChild(row);
 
-    markers[p.nome]=m;
-
-    m.on("click",()=>seleziona(p));
-  });
+});
 }
 
-// ===== MENU =====
-function creaMenu(){
-  let menu=document.getElementById("menuPoi");
+/* CARD */
+function openDetail(p){
+document.getElementById("poiTitle").innerText=p.name;
 
-  POI.forEach(p=>{
-    let div=document.createElement("div");
-    div.className="poi-item";
-    div.innerText=p.nome;
-    div.onclick=()=>seleziona(p);
-    menu.appendChild(div);
-  });
-}
-
-document.getElementById("menuBtn").onclick=()=>{
-  let m=document.getElementById("menuPoi");
-  m.style.display = m.style.display==="none"?"block":"none";
+document.getElementById("wikiBtn").onclick=function(){
+window.open("https://it.wikipedia.org/wiki/"+encodeURIComponent(p.name));
 };
 
-// ===== SELEZIONE + POPUP =====
-function seleziona(p){
+document.getElementById("goBtn").onclick=function(){
+window.open(`https://www.google.com/maps/dir/${userLat},${userLng}/${p.lat},${p.lon}`);
+};
 
-  if(selected){
-    let old=markers[selected.nome];
-    old.setStyle({
-      fillColor:colore(selected.categoria),
-      color:colore(selected.categoria),
-      radius:6
-    });
-  }
-
-  let m=markers[p.nome];
-
-  map.setView([p.lat,p.lon],13);
-
-  m.setStyle({
-    fillColor:"red",
-    color:"red",
-    radius:10
-  });
-
-  selected=p;
-
-  let wiki = encodeURIComponent(p.nome.replace(/ /g,"_"));
-  let wikiURL = `https://it.wikipedia.org/wiki/${wiki}`;
-  let mapsURL = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
-
-  let popup = `
-    <b>${p.nome}</b><br><br>
-    <a href="${wikiURL}" target="_blank">📖 Wikipedia</a><br><br>
-    <a href="${mapsURL}" target="_blank">📍 Portami qui</a>
-  `;
-
-  m.bindPopup(popup).openPopup();
+document.getElementById("detailCard").style.display="block";
 }
+
+function closeCard(){
+document.getElementById("detailCard").style.display="none";
+}
+
+document.getElementById("plusBtn").onclick=function(){
+let p=document.getElementById("poiPanel");
+p.style.display=(p.style.display==="block")?"none":"block";
+};
 
 </script>
 
