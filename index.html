@@ -92,11 +92,17 @@ text-align:center;
 </div>
 </div>
 
-<div id="header"><img src="header-wayfinder.png"></div>
-<div id="topBar">POI entro <span id="raggioTxt">--</span> KM</div>
+<div id="header">
+<img src="header-wayfinder.png">
+</div>
+
+<div id="topBar">
+POI entro <span id="raggioTxt">--</span> KM
+</div>
 
 <div id="mapWrap">
 <div id="map"></div>
+
 <button id="plusBtn">+</button>
 
 <div id="poiPanel">
@@ -107,7 +113,6 @@ text-align:center;
 </div>
 <div id="poiList"></div>
 </div>
-
 </div>
 
 <div id="detailCard">
@@ -118,8 +123,8 @@ text-align:center;
 </div>
 
 <footer>
-<div class="rss"><div class="track">Test Borghi + Nuraghi</div></div>
-<div class="rss"><div class="track">📞 112 ✦ 📞 118</div></div>
+<div class="rss"><div class="track">WayFinder Sardegna ✦ Cultura ✦ Turismo</div></div>
+<div class="rss"><div class="track">📞 112 ✦ 📞 118 ✦ 📞 INFOPOINT</div></div>
 <div><b>PASSAMONTI</b>_COMMUNICATION</div>
 </footer>
 
@@ -137,9 +142,59 @@ let radiusKm=50;
 let poiLayer=L.layerGroup().addTo(map);
 let filter="all";
 
-/* SLIDER */
-document.getElementById("radius").oninput=function(){
-document.getElementById("radiusValue").innerText=this.value;
+/* DATI COMPLETI */
+let poiData=[
+
+// BORGI
+{name:"Lollove",cat:"borghi",lat:40.365,lon:9.3324},
+{name:"Tempio Pausania",cat:"borghi",lat:40.9,lon:9.1},
+{name:"Aggius",cat:"borghi",lat:40.93,lon:8.98},
+{name:"Atzara",cat:"borghi",lat:39.99,lon:9.07},
+{name:"Bosa",cat:"borghi",lat:40.3,lon:8.5},
+{name:"Carloforte",cat:"borghi",lat:39.14,lon:8.3},
+{name:"Galtellì",cat:"borghi",lat:40.39,lon:9.61},
+{name:"Laconi",cat:"borghi",lat:39.85,lon:9.05},
+{name:"La Maddalena",cat:"borghi",lat:41.21,lon:9.41},
+{name:"Oliena",cat:"borghi",lat:40.27,lon:9.4},
+{name:"Posada",cat:"borghi",lat:40.63,lon:9.72},
+{name:"Sadali",cat:"borghi",lat:39.82,lon:9.27},
+{name:"Sardara",cat:"borghi",lat:39.62,lon:8.82},
+{name:"Gavoi",cat:"borghi",lat:40.16,lon:9.2},
+{name:"Castelsardo",cat:"borghi",lat:40.92,lon:8.71},
+
+// NURAGHI
+{name:"Nuraghe Majori",cat:"nuraghi",lat:40.9,lon:9.1},
+{name:"Nuraghe Palmavera",cat:"nuraghi",lat:40.557,lon:8.319},
+{name:"Romanzesu",cat:"nuraghi",lat:40.482,lon:9.375},
+{name:"Santu Antine",cat:"nuraghi",lat:40.421,lon:8.735},
+{name:"Nuraghe Appiu",cat:"nuraghi",lat:40.502,lon:8.58},
+{name:"Serra Orrios",cat:"nuraghi",lat:40.292,lon:9.588},
+{name:"Nuraghe Orolo",cat:"nuraghi",lat:40.268,lon:8.84},
+{name:"Sa Sedda e Sos Carros",cat:"nuraghi",lat:40.273,lon:9.405},
+{name:"Nuraghe Losa",cat:"nuraghi",lat:40.128,lon:8.82},
+{name:"Santa Cristina",cat:"nuraghi",lat:40.064,lon:8.78},
+{name:"S’Arcu e Is Forros",cat:"nuraghi",lat:40.0,lon:9.45},
+{name:"Nuraghe Is Paras",cat:"nuraghi",lat:39.74,lon:9.1},
+{name:"Su Nuraxi",cat:"nuraghi",lat:39.7,lon:9.0},
+{name:"Santa Vittoria",cat:"nuraghi",lat:39.71,lon:9.1},
+{name:"Nuraghe Arrubiu",cat:"nuraghi",lat:39.66,lon:9.3},
+{name:"Nuraghe Cuccurada",cat:"nuraghi",lat:39.66,lon:8.74},
+{name:"Genna Maria",cat:"nuraghi",lat:39.63,lon:8.85},
+{name:"Su Mulinu",cat:"nuraghi",lat:39.63,lon:8.99},
+{name:"Nuraghe Seruci",cat:"nuraghi",lat:39.25,lon:8.42},
+{name:"Nuraghe Diana",cat:"nuraghi",lat:39.23,lon:9.24}
+
+];
+
+/* DISTANZA */
+function distanza(a,b,c,d){
+let R=6371;
+let dLat=(c-a)*Math.PI/180;
+let dLon=(d-b)*Math.PI/180;
+let x=Math.sin(dLat/2)**2+
+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*
+Math.sin(dLon/2)**2;
+return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
 /* GPS */
@@ -153,6 +208,11 @@ document.getElementById("radiusModal").classList.remove("hidden");
 });
 }
 
+/* SLIDER */
+document.getElementById("radius").oninput=function(){
+document.getElementById("radiusValue").innerText=this.value;
+}
+
 /* START */
 function startApp(){
 radiusKm=document.getElementById("radius").value;
@@ -164,17 +224,6 @@ drawUser();
 loadPOI();
 }
 
-/* DISTANZA */
-function distanza(a,b,c,d){
-let R=6371;
-let dLat=(c-a)*Math.PI/180;
-let dLon=(d-b)*Math.PI/180;
-let x=Math.sin(dLat/2)**2+
-Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*
-Math.sin(dLon/2)**2;
-return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-}
-
 /* USER */
 function drawUser(){
 L.circleMarker([userLat,userLng],{
@@ -184,10 +233,7 @@ radius:12,color:"red",fillColor:"red",fillOpacity:1
 map.setView([userLat,userLng],10);
 }
 
-/* POI DATA */
-let poiData = [...]; // (lascia invariato quello che hai già)
-
-/* LOAD */
+/* POI */
 function loadPOI(){
 poiLayer.clearLayers();
 document.getElementById("poiList").innerHTML="";
@@ -217,16 +263,33 @@ document.getElementById("poiList").appendChild(row);
 });
 }
 
-/* RESTO UGUALE */
-function setFilter(f){filter=f;loadPOI();}
+/* FILTER */
+function setFilter(f){
+filter=f;
+document.querySelectorAll(".filter button").forEach(b=>b.classList.remove("active"));
+event.target.classList.add("active");
+loadPOI();
+}
+
+/* CARD */
 function openDetail(p){
 document.getElementById("poiTitle").innerText=p.name;
+
 document.getElementById("wikiBtn").onclick=()=>window.open("https://it.wikipedia.org/wiki/"+encodeURIComponent(p.name));
 document.getElementById("goBtn").onclick=()=>window.open(`https://www.google.com/maps/dir/${userLat},${userLng}/${p.lat},${p.lon}`);
+
 document.getElementById("detailCard").style.display="block";
 }
-function closeCard(){document.getElementById("detailCard").style.display="none";}
-document.getElementById("plusBtn").onclick=()=>{let p=document.getElementById("poiPanel");p.style.display=p.style.display==="block"?"none":"block";}
+
+function closeCard(){
+document.getElementById("detailCard").style.display="none";
+}
+
+/* MENU */
+document.getElementById("plusBtn").onclick=function(){
+let p=document.getElementById("poiPanel");
+p.style.display=p.style.display==="block"?"none":"block";
+};
 
 </script>
 
