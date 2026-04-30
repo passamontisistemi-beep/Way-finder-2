@@ -3,141 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>WayFinder Sardegna - Test Borghi</title>
+<title>WayFinder Sardegna - Test</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#dfe7ee;display:flex;justify-content:center;align-items:center;min-height:100vh}
+#app{width:min(100vw,390px);aspect-ratio:9/16;background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column}
 
-body{
-background:#dfe7ee;
-display:flex;
-justify-content:center;
-align-items:center;
-min-height:100vh;
-padding:10px;
-}
-
-#app{
-width:min(100vw,390px);
-aspect-ratio:9/16;
-background:#fff;
-border-radius:28px;
-overflow:hidden;
-display:flex;
-flex-direction:column;
-}
-
-/* HEADER */
 #header img{width:100%}
+#topBar{text-align:center;font-weight:800;padding:8px;font-size:13px}
 
-#topBar{
-padding:8px;
-text-align:center;
-font-weight:800;
-font-size:13px;
-}
-
-/* MAP */
 #mapWrap{flex:1;position:relative}
 #map{width:100%;height:100%}
 
-/* BUTTON */
 #plusBtn{
-position:absolute;
-top:60px;
-right:12px;
-width:60px;
-height:60px;
-border-radius:50%;
-background:red;
-color:#fff;
-font-size:38px;
-z-index:2000;
-animation:pulse 1.2s infinite;
+position:absolute;top:60px;right:12px;
+width:60px;height:60px;border-radius:50%;
+background:red;color:#fff;font-size:38px;
+z-index:2000;animation:pulse 1.2s infinite;
 }
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
 
-@keyframes pulse{
-0%{transform:scale(1)}
-50%{transform:scale(1.1)}
-100%{transform:scale(1)}
-}
-
-/* PANEL */
 #poiPanel{
-position:absolute;
-top:80px;
-left:10px;
-right:10px;
-background:#fff;
-border-radius:16px;
-display:none;
-max-height:55%;
-overflow:auto;
-z-index:999;
-padding:10px;
+position:absolute;top:80px;left:10px;right:10px;
+background:#fff;border-radius:16px;display:none;
+max-height:55%;overflow:auto;padding:10px;z-index:999;
 }
 
-.poiItem{
-padding:8px;
-border-bottom:1px solid #eee;
-cursor:pointer;
-font-weight:600;
-}
+.filter{display:flex;gap:5px;margin-bottom:8px}
+.filter button{flex:1;padding:6px;border:none;border-radius:8px}
+.active{background:black;color:white}
 
-/* CARD */
+.poiItem{padding:8px;border-bottom:1px solid #eee;cursor:pointer}
+
 #detailCard{
-position:absolute;
-top:25%;
-left:10px;
-right:10px;
-background:#fff;
-border-radius:16px;
-padding:12px;
-display:none;
-z-index:1000;
+position:absolute;top:25%;left:10px;right:10px;
+background:#fff;border-radius:16px;padding:12px;
+display:none;z-index:1000;
 }
 .btn{width:100%;padding:10px;margin-top:6px}
 
-/* FOOTER */
-footer{
-height:110px;
-background:#111;
-color:#fff;
-text-align:center;
-}
+footer{background:#111;color:#fff;text-align:center;height:100px}
+.rss{height:24px;overflow:hidden}
+.track{animation:scroll 30s linear infinite}
+@keyframes scroll{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
 
-.rss{height:26px;overflow:hidden;}
-.track{animation:scroll 30s linear infinite;}
-@keyframes scroll{
-0%{transform:translateX(100%)}
-100%{transform:translateX(-100%)}
-}
-
-.brand{
-font-size:16px;
-font-weight:900;
-}
-
-/* POPUP */
-.overlay{
-position:absolute;
-inset:0;
-background:rgba(0,0,0,.7);
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:2000;
-}
-
-.popup{
-background:#fff;
-padding:20px;
-border-radius:16px;
-text-align:center;
-}
-
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center}
+.popup{background:#fff;padding:20px;border-radius:16px}
 .hidden{display:none}
 </style>
 </head>
@@ -146,7 +60,6 @@ text-align:center;
 
 <div id="app">
 
-<!-- GPS -->
 <div id="gpsModal" class="overlay">
 <div class="popup">
 <h3>Consenti GPS</h3>
@@ -154,31 +67,28 @@ text-align:center;
 </div>
 </div>
 
-<!-- RAGGIO -->
 <div id="radiusModal" class="overlay hidden">
 <div class="popup">
-<p>Seleziona raggio</p>
+<p>Raggio</p>
 <input type="range" min="1" max="200" value="50" id="radius">
 <p><span id="radiusValue">50</span> km</p>
 <button onclick="startApp()">Avvia</button>
 </div>
 </div>
 
-<div id="header">
-<img src="header-wayfinder.png">
-</div>
-
-<div id="topBar">
-BORGI entro <span id="raggioTxt">--</span> KM
-</div>
+<div id="header"><img src="header-wayfinder.png"></div>
+<div id="topBar">POI entro <span id="raggioTxt">--</span> KM</div>
 
 <div id="mapWrap">
-
 <div id="map"></div>
-
 <button id="plusBtn">+</button>
 
 <div id="poiPanel">
+<div class="filter">
+<button onclick="setFilter('all')" class="active">Tutti</button>
+<button onclick="setFilter('borghi')">Borghi</button>
+<button onclick="setFilter('nuraghi')">Nuraghi</button>
+</div>
 <div id="poiList"></div>
 </div>
 
@@ -192,9 +102,9 @@ BORGI entro <span id="raggioTxt">--</span> KM
 </div>
 
 <footer>
-<div class="rss"><div class="track">Borghi storici della Sardegna ✦ Turismo culturale</div></div>
-<div class="rss"><div class="track">📞 112 ✦ 📞 118 ✦ 📞 INFOPOINT</div></div>
-<div class="brand"><b>PASSAMONTI</b>_COMMUNICATION</div>
+<div class="rss"><div class="track">Test Borghi + Nuraghi</div></div>
+<div class="rss"><div class="track">📞 112 ✦ 📞 118</div></div>
+<div><b>PASSAMONTI</b>_COMMUNICATION</div>
 </footer>
 
 </div>
@@ -208,24 +118,50 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
 let userLat=40,userLng=9;
 let poiLayer=L.layerGroup().addTo(map);
+let filter="all";
 
-/* 🔥 15 BORGHI REALI */
+/* 🔥 DATA COMPLETO */
 let poiData=[
-{name:"Lollove",lat:40.365,lon:9.3324},
-{name:"Tempio Pausania",lat:40.9,lon:9.1},
-{name:"Aggius",lat:40.93,lon:8.98},
-{name:"Atzara",lat:39.99,lon:9.07},
-{name:"Bosa",lat:40.3,lon:8.5},
-{name:"Carloforte",lat:39.14,lon:8.3},
-{name:"Galtellì",lat:40.39,lon:9.61},
-{name:"Laconi",lat:39.85,lon:9.05},
-{name:"La Maddalena",lat:41.21,lon:9.41},
-{name:"Oliena",lat:40.27,lon:9.4},
-{name:"Posada",lat:40.63,lon:9.72},
-{name:"Sadali",lat:39.82,lon:9.27},
-{name:"Sardara",lat:39.62,lon:8.82},
-{name:"Gavoi",lat:40.16,lon:9.2},
-{name:"Castelsardo",lat:40.92,lon:8.71}
+
+// BORGI
+{name:"Lollove",cat:"borghi",lat:40.365,lon:9.3324},
+{name:"Tempio Pausania",cat:"borghi",lat:40.9,lon:9.1},
+{name:"Aggius",cat:"borghi",lat:40.93,lon:8.98},
+{name:"Atzara",cat:"borghi",lat:39.99,lon:9.07},
+{name:"Bosa",cat:"borghi",lat:40.3,lon:8.5},
+{name:"Carloforte",cat:"borghi",lat:39.14,lon:8.3},
+{name:"Galtellì",cat:"borghi",lat:40.39,lon:9.61},
+{name:"Laconi",cat:"borghi",lat:39.85,lon:9.05},
+{name:"La Maddalena",cat:"borghi",lat:41.21,lon:9.41},
+{name:"Oliena",cat:"borghi",lat:40.27,lon:9.4},
+{name:"Posada",cat:"borghi",lat:40.63,lon:9.72},
+{name:"Sadali",cat:"borghi",lat:39.82,lon:9.27},
+{name:"Sardara",cat:"borghi",lat:39.62,lon:8.82},
+{name:"Gavoi",cat:"borghi",lat:40.16,lon:9.2},
+{name:"Castelsardo",cat:"borghi",lat:40.92,lon:8.71},
+
+// NURAGHI
+{name:"Nuraghe Majori",cat:"nuraghi",lat:40.9,lon:9.1},
+{name:"Nuraghe Palmavera",cat:"nuraghi",lat:40.557,lon:8.319},
+{name:"Romanzesu",cat:"nuraghi",lat:40.482,lon:9.375},
+{name:"Santu Antine",cat:"nuraghi",lat:40.421,lon:8.735},
+{name:"Nuraghe Appiu",cat:"nuraghi",lat:40.502,lon:8.58},
+{name:"Serra Orrios",cat:"nuraghi",lat:40.292,lon:9.588},
+{name:"Nuraghe Orolo",cat:"nuraghi",lat:40.268,lon:8.84},
+{name:"Sa Sedda e Sos Carros",cat:"nuraghi",lat:40.273,lon:9.405},
+{name:"Nuraghe Losa",cat:"nuraghi",lat:40.128,lon:8.82},
+{name:"Santa Cristina",cat:"nuraghi",lat:40.064,lon:8.78},
+{name:"S’Arcu e Is Forros",cat:"nuraghi",lat:40.0,lon:9.45},
+{name:"Nuraghe Is Paras",cat:"nuraghi",lat:39.74,lon:9.1},
+{name:"Su Nuraxi",cat:"nuraghi",lat:39.7,lon:9.0},
+{name:"Santa Vittoria",cat:"nuraghi",lat:39.71,lon:9.1},
+{name:"Nuraghe Arrubiu",cat:"nuraghi",lat:39.66,lon:9.3},
+{name:"Nuraghe Cuccurada",cat:"nuraghi",lat:39.66,lon:8.74},
+{name:"Genna Maria",cat:"nuraghi",lat:39.63,lon:8.85},
+{name:"Su Mulinu",cat:"nuraghi",lat:39.63,lon:8.99},
+{name:"Nuraghe Seruci",cat:"nuraghi",lat:39.25,lon:8.42},
+{name:"Nuraghe Diana",cat:"nuraghi",lat:39.23,lon:9.24}
+
 ];
 
 /* GPS */
@@ -238,47 +174,30 @@ document.getElementById("radiusModal").classList.remove("hidden");
 });
 }
 
-/* SLIDER */
 document.getElementById("radius").oninput=function(){
 document.getElementById("radiusValue").innerText=this.value;
 }
 
-/* START */
 function startApp(){
-let r=document.getElementById("radius").value;
-document.getElementById("raggioTxt").innerText=r;
+document.getElementById("raggioTxt").innerText=document.getElementById("radius").value;
 document.getElementById("radiusModal").classList.add("hidden");
 
-drawUser();
+L.circleMarker([userLat,userLng],{radius:12,color:"red",fillColor:"red"}).addTo(map).bindPopup("TU SEI QUI");
+
 loadPOI();
 }
 
-/* USER */
-function drawUser(){
-L.circleMarker([userLat,userLng],{
-radius:12,
-color:"red",
-fillColor:"red",
-fillOpacity:1
-}).addTo(map).bindPopup("TU SEI QUI").openPopup();
-
-map.setView([userLat,userLng],10);
-}
-
-/* POI */
 function loadPOI(){
-
 poiLayer.clearLayers();
 document.getElementById("poiList").innerHTML="";
 
 poiData.forEach(p=>{
+if(filter!=="all" && p.cat!==filter) return;
+
+let color=p.cat==="nuraghi"?"red":"orange";
 
 let m=L.circleMarker([p.lat,p.lon],{
-radius:10,
-color:"#000",
-weight:2,
-fillColor:"orange",
-fillOpacity:1
+radius:10,color:"#000",fillColor:color,fillOpacity:1
 }).addTo(poiLayer);
 
 m.on("click",()=>openDetail(p));
@@ -286,28 +205,23 @@ m.on("click",()=>openDetail(p));
 let row=document.createElement("div");
 row.className="poiItem";
 row.innerText=p.name;
-
-row.onclick=function(){
-map.setView([p.lat,p.lon],13);
-};
+row.onclick=()=>map.setView([p.lat,p.lon],13);
 
 document.getElementById("poiList").appendChild(row);
-
 });
 }
 
-/* CARD */
+function setFilter(f){
+filter=f;
+document.querySelectorAll(".filter button").forEach(b=>b.classList.remove("active"));
+event.target.classList.add("active");
+loadPOI();
+}
+
 function openDetail(p){
 document.getElementById("poiTitle").innerText=p.name;
-
-document.getElementById("wikiBtn").onclick=function(){
-window.open("https://it.wikipedia.org/wiki/"+encodeURIComponent(p.name));
-};
-
-document.getElementById("goBtn").onclick=function(){
-window.open(`https://www.google.com/maps/dir/${userLat},${userLng}/${p.lat},${p.lon}`);
-};
-
+document.getElementById("wikiBtn").onclick=()=>window.open("https://it.wikipedia.org/wiki/"+encodeURIComponent(p.name));
+document.getElementById("goBtn").onclick=()=>window.open(`https://www.google.com/maps/dir/${userLat},${userLng}/${p.lat},${p.lon}`);
 document.getElementById("detailCard").style.display="block";
 }
 
